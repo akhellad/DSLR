@@ -6,20 +6,22 @@ import sys
 def create_pair_plot(filepath):
     df = pd.read_csv(filepath)
     
-    # Optionnel : Sélectionner un sous-ensemble de caractéristiques pour le pair plot
-    # Cela peut être utile si tu as beaucoup de caractéristiques et que tu veux te concentrer sur quelques-unes d'entre elles
-    features = ['Feature1', 'Feature2', 'Feature3', 'Hogwarts House']
-    df = df[features]
+    # Sélectionner uniquement les colonnes des matières
+    subjects = ['Herbology', 'Defense Against the Dark Arts','Ancient Runes', 'Potions' ,'Charms']
     
-    # Créer un pair plot. Si tu as une colonne 'Hogwarts House' ou toute autre catégorie, tu peux l'utiliser comme hue pour colorer les points.
-    # Remplace 'Hogwarts House' par le nom de ta colonne de catégories si nécessaire
-    sns.pairplot(df, hue='Hogwarts House', diag_kind='kde', corner=True)
+    # Ajouter 'Hogwarts House' à la liste pour utiliser comme couleur dans le pair plot
+    columns_to_keep = subjects + ['Hogwarts House']
     
+    # Filtrer le DataFrame pour ne garder que les colonnes sélectionnées
+    df_filtered = df[columns_to_keep]
+    
+    # Créer un pair plot avec seaborn
+    sns.pairplot(df_filtered, hue='Hogwarts House', diag_kind='kde', corner=True)
     plt.show()
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: pair_plot.py dataset.csv")
+        print("Usage: python pair_plot.py <path_to_your_dataset>")
         sys.exit(1)
 
     filepath = sys.argv[1]
