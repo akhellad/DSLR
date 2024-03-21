@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 def predict_multiclass(X, all_theta):
     # Calculer les probabilités pour chaque classe
@@ -37,40 +39,33 @@ def gradient_descent(X, y, theta, learning_rate, n_iterations):
         cost_history[i] = cost_function_logistic(X, y, theta)
     return theta, cost_history
 
-# Assure-toi que les fonctions sigmoid, cost_function_logistic, grad_logistic, gradient_descent, predict_multiclass et accuracy_multiclass sont bien définies.
-
 def main():
     df = pd.read_csv('./datasets/dataset_train.csv')
 
     features = ['Herbology', 'Defense Against the Dark Arts', 'Ancient Runes', 'Potions', 'Charms']
-    X = df[features].copy()
-
-    X.fillna(X.mean(), inplace=True)
-
-    y = df['Hogwarts House'].values
-    houses = np.unique(y)
-    all_theta = np.zeros((len(houses), X.shape[1] + 1))
-
+    X = df[features].fillna(df[features].mean())
+    
     X = (X - X.mean()) / (X.std() + 1e-5)
+    
     X = np.hstack((np.ones((X.shape[0], 1)), X))
     
+    y = df['Hogwarts House']
+    houses = np.unique(y)
+    y_numeric = np.array([np.where(houses == house)[0][0] for house in y])
+
+    X_train, X_val, y_train, y_val = train_test_split(X, y_numeric, test_size=0.2, random_state=42)
+
+    all_theta = np.zeros((len(houses), X.shape[1]))
+
     for i, house in enumerate(houses):
         print(f"Training model for {house}")
-        y_binary = (y == house).astype(int)
-        theta_i, cost_history = gradient_descent(X, y_binary.reshape(-1, 1), np.zeros((X.shape[1], 1)), 0.1, 3000)
+        y_binary = (y_train == i).astype(int)
+        theta_i, cost_history = gradient_descent(X_train, y_binary.reshape(-1, 1), np.zeros((X.shape[1], 1)), 0.1, 3000)
         all_theta[i, :] = theta_i.T
-        plt.plot(cost_history, label=house)
 
-    plt.xlabel('Nombre d\'itérations')
-    plt.ylabel('Coût')
-    plt.title('Évolution du coût par maison')
-    plt.legend()
-    plt.show()
-
-    preds = predict_multiclass(X, all_theta)
-    print("Accuracy:", accuracy_multiclass(y, preds, houses))
-
-    np.save('finalTheta.npy', all_theta)
+    preds = predict_multiclass(X_val, all_theta)
+    accuracy = accuracy_score(y_val, preds)
+    print(f"Accuracy sur l'ensemble de validation: {accuracy}")
 
 if __name__ == "__main__":
     main()
